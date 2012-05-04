@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.mixare.data.DataHandler;
 import org.mixare.data.DataSourceList;
+import org.mixare.lib.marker.Marker;
+import org.mixare.lib.MixUtils;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -197,7 +199,6 @@ public class MixMap extends MapActivity implements OnTouchListener{
 	}
 
 	public void createListView(){
-		MixListView.setList(2);
 		if (dataView.getDataHandler().getMarkerCount() > 0) {
 			Intent intent1 = new Intent(MixMap.this, MixListView.class); 
 			startActivityForResult(intent1, 42);
