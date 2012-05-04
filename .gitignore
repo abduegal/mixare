@@ -2,3 +2,5 @@
 /gen
 /.sonar
 sonar-project.properties
+.classpath
+project.properties
