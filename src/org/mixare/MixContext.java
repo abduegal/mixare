@@ -163,7 +163,7 @@ public class MixContext extends ContextWrapper implements MixContextInterface{
 			// ex2.printStackTrace();
 			curLoc = hardFix;
 			Toast.makeText(this,
-					getString(DataView.CONNECTION_GPS_DIALOG_TEXT),
+					getString(R.string.connection_GPS_dialog_text),
 					Toast.LENGTH_LONG).show();
 		}
 
