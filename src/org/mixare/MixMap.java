@@ -30,6 +30,7 @@ import org.mixare.lib.MixUtils;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -64,7 +65,10 @@ public class MixMap extends MapActivity implements OnTouchListener{
 	private static List<Marker> markerList;
 	private static DataView dataView;
 	private static GeoPoint startPoint;
-
+	private static List<GeoPoint> walkingPath = new ArrayList<GeoPoint>();
+	
+	public static final String PREFS_NAME = "MixMapPrefs";
+	
 	private MixContext mixContext;
 	private MapView mapView;
 
@@ -159,13 +163,19 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		MenuItem item3 =menu.add(base, base+2, base+2, getString(R.string.map_my_location)); 
 		MenuItem item4 =menu.add(base, base+3, base+3, getString(R.string.menu_item_2)); 
 		MenuItem item5 =menu.add(base, base+4, base+4, getString(R.string.map_menu_cam_mode)); 
-
+		MenuItem item6 =null;
+		if(isPathVisible()){
+			item6 =menu.add(base, base+5, base+5, getString(R.string.map_toggle_path_off)); 
+		}else{
+			item6 =menu.add(base, base+5, base+5, getString(R.string.map_toggle_path_on));
+		}
 		/*assign icons to the menu items*/
 		item1.setIcon(android.R.drawable.ic_menu_gallery);
 		item2.setIcon(android.R.drawable.ic_menu_mapmode);
 		item3.setIcon(android.R.drawable.ic_menu_mylocation);
 		item4.setIcon(android.R.drawable.ic_menu_view);
 		item5.setIcon(android.R.drawable.ic_menu_camera);
+		item6.setIcon(android.R.drawable.ic_menu_directions);
 
 		return true;
 	}
@@ -194,7 +204,13 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		case 5:
 			finish();
 			break;
-		}
+	
+	case 6:
+		togglePath();
+		//refresh:
+		startActivity(getIntent()); 
+		finish();
+	}
 		return true;
 	}
 
@@ -208,10 +224,14 @@ public class MixMap extends MapActivity implements OnTouchListener{
 			Toast.makeText( this, R.string.empty_list, Toast.LENGTH_LONG ).show();			
 		}
 	}
+	
 
-//	public static ArrayList<Marker> getMarkerList(){
-//		return markerList;
-//	}
+	/**
+	 * Adds a position to the walking route.(This route will be drawn on the map)
+	 */
+	public static void addWalkingPathPosition(GeoPoint geoPoint){
+		walkingPath.add(geoPoint);
+	}
 
 	public void setMarkerList(List<Marker> maList){
 		markerList = maList;
@@ -302,6 +322,20 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		startActivityForResult(intent1, 42);
 
 		return false;
+	}
+	private boolean isPathVisible(){
+		final String property = "pathVisible";
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		return settings.getBoolean(property, true);
+	}
+	
+	private void togglePath(){
+		final String property = "pathVisible";
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		boolean result = settings.getBoolean(property, true);
+		editor.putBoolean(property, !result);
+		editor.commit();		
 	}
 
 }

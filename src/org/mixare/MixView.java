@@ -134,7 +134,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 			if (!isInited) {
 				mixViewData.setMixContext(new MixContext(this));
-				mixViewData.getMixContext().downloadManager = new DownloadManager(mixViewData.getMixContext());
+				mixViewData.getMixContext().setDownloadManager(new DownloadManager(mixViewData.getMixContext()));
 				setdWindow(new PaintScreen());
 				setDataView(new DataView(mixViewData.getMixContext()));
 
@@ -168,7 +168,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 				mixViewData.setSensorMgr(null);
 
 				mixViewData.getMixContext().unregisterLocationManager();
-				mixViewData.getMixContext().downloadManager.stop();
+				mixViewData.getMixContext().getDownloadManager().stop();
 				
 				if(getDataView() != null){
 					getDataView().cancelRefreshTimer();
@@ -253,20 +253,19 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 			try {
 
-				GeomagneticField gmf = new GeomagneticField((float) mixViewData.getMixContext().curLoc
-						.getLatitude(), (float) mixViewData.getMixContext().curLoc.getLongitude(),
-						(float) mixViewData.getMixContext().curLoc.getAltitude(), System
+				GeomagneticField gmf = new GeomagneticField((float) mixViewData.getMixContext().getCurrentLocation()
+						.getLatitude(), (float) mixViewData.getMixContext().getCurrentLocation().getLongitude(),
+						(float) mixViewData.getMixContext().getCurrentLocation().getAltitude(), System
 						.currentTimeMillis());
 
 				angleY = (float) Math.toRadians(-gmf.getDeclination());
 				mixViewData.getM4().set((float) FloatMath.cos(angleY), 0f,
 						(float) FloatMath.sin(angleY), 0f, 1f, 0f, (float) -FloatMath
 						.sin(angleY), 0f, (float) FloatMath.cos(angleY));
-				mixViewData.getMixContext().declination = gmf.getDeclination();
 			} catch (Exception ex) {
 				Log.d("mixare", "GPS Initialize Error", ex);
 			}
-			mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().downloadManager));
+			mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().getDownloadManager()));
 			mixViewData.getDownloadThread().start();
 		} catch (Exception ex) {
 			doError(ex);
@@ -279,8 +278,8 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 				if (mixViewData.getMixContext() != null) {
 					mixViewData.getMixContext().unregisterLocationManager();
-					if (mixViewData.getMixContext().downloadManager != null)
-						mixViewData.getMixContext().downloadManager.stop();
+					if (mixViewData.getMixContext().getDownloadManager() != null)
+						mixViewData.getMixContext().getDownloadManager().stop();
 				}
 			} catch (Exception ignore) {
 			}
@@ -820,7 +819,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 		getDataView().doStart();
 		getDataView().clearEvents();
-		mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().downloadManager));
+		mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().getDownloadManager()));
 		mixViewData.getDownloadThread().start();
 
 	};
