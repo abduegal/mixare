@@ -167,7 +167,11 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		if(isPathVisible()){
 			item6 =menu.add(base, base+5, base+5, getString(R.string.map_toggle_path_off)); 
 		}else{
+<<<<<<< HEAD
 			item6 =menu.add(base, base+5, base+5, getString(R.string.map_toggle_path_on));
+=======
+			item6 =menu.add(base, base+5, base+5, getString(DataView.MAP_TOGGLE_PATH_ON));
+>>>>>>> mixare/development
 		}
 		/*assign icons to the menu items*/
 		item1.setIcon(android.R.drawable.ic_menu_gallery);
