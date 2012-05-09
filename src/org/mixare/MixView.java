@@ -115,22 +115,9 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			killOnError();
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-			/*Get the preference file PREFS_NAME stored in the internal memory of the phone*/
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-			
-			
-			FrameLayout frameLayout = createZoomBar(settings);
-
-			camScreen = new CameraSurface(this);
-			augScreen = new AugmentedView(this);
-			setContentView(camScreen);
-
-			addContentView(augScreen, new LayoutParams(
-					LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-
-			addContentView(frameLayout, new FrameLayout.LayoutParams(
-					LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT,
-					Gravity.BOTTOM));
+			maintainCamera();
+			maintainAugmentR();
+			maintainZoomBar();
 
 			if (!isInited) {
 				mixViewData.setMixContext(new MixContext(this));
@@ -143,6 +130,9 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 				isInited = true;		
 			}
 
+			/*Get the preference file PREFS_NAME stored in the internal memory of the phone*/
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			
 			/*check if the application is launched for the first time*/
 			if(settings.getBoolean("firstAccess",false)==false){
 				firstAccess(settings);
@@ -153,7 +143,6 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			doError(ex);
 		}
 	}
-
 
 	@Override
 	protected void onPause() {
@@ -312,7 +301,39 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 		setZoomLevel(); //@TODO Caller has to set the zoom. This function repaints only.
 	}
 	
+	/**
+	 *  Checks camScreen, if it does not exist, it creates one.
+	 */
+	private void maintainCamera() {
+		if (camScreen == null){
+		camScreen = new CameraSurface(this);
+		}
+		setContentView(camScreen);
+	}
+	
+	/**
+	 * Checks augScreen, if it does not exist, it creates one.
+	 */
+	private void maintainAugmentR() {
+		if (augScreen == null ){
+		augScreen = new AugmentedView(this);
+		}
+		addContentView(augScreen, new LayoutParams(
+				LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
+	}
+	
+	/**
+	 * Creates a zoom bar and adds it to view.
+	 */
+	private void maintainZoomBar() {
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		FrameLayout frameLayout = createZoomBar(settings);
+		addContentView(frameLayout, new FrameLayout.LayoutParams(
+				LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT,
+				Gravity.BOTTOM));
+	}
+	
 	public void setErrorDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage(getString(R.string.connection_error_dialog));
