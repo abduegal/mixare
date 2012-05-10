@@ -73,7 +73,7 @@ public class MixMap extends MapActivity implements OnTouchListener{
 	private static List<GeoPoint> walkingPath = new ArrayList<GeoPoint>();
 	
 	public static final String PREFS_NAME = "MixMapPrefs";
-	
+
 	private MixContext mixContext;
 	private MapView mapView;
 
@@ -107,7 +107,8 @@ public class MixMap extends MapActivity implements OnTouchListener{
 
 		setStartPoint();
 		createOverlay();
-
+		createWalkingPath();
+		
 		if (dataView.isFrozen()){
 			searchNotificationTxt = new TextView(this);
 			searchNotificationTxt.setWidth(MixView.getdWindow().getWidth());
@@ -159,7 +160,13 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		myOverlay.addOverlay(item);
 		getMapOverlays().add(myOverlay); 
 	}
-
+	public void createWalkingPath(){
+		if(isPathVisible()){
+			mapOverlays=mapView.getOverlays();
+			Overlay item = new MixPath(walkingPath);
+			mapOverlays.add(item);
+		}
+	}
 	public void createListView(){
 		if (dataView.getDataHandler().getMarkerCount() > 0) {
 			Intent intent1 = new Intent(MixMap.this, MixListView.class); 
@@ -396,7 +403,9 @@ public class MixMap extends MapActivity implements OnTouchListener{
 	}
 }
 
-
+/**
+ * Draws Items on the map.
+ */
 class MixOverlay extends ItemizedOverlay<OverlayItem> {
 
 	private ArrayList<OverlayItem> overlayItems = new ArrayList<OverlayItem>();
@@ -489,4 +498,5 @@ class MixPath extends Overlay{
         canvas.drawPath(path, mPaint);
     }
 }
+
 
