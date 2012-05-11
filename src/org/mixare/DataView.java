@@ -224,7 +224,7 @@ public class DataView {
 		request.source = new DataSource("LAUNCHER", url, DataSource.TYPE.MIXARE, DataSource.DISPLAY.CIRCLE_MARKER, true);
 		request.params = "";
 		mixContext.setAllDataSourcesforLauncher(request.source);
-		mixContext.getDownloader().submitJob(request);
+		mixContext.getDownloadManager().submitJob(request);
 		state.nextLStatus = MixState.PROCESSING;
 		
 	}
@@ -234,7 +234,7 @@ public class DataView {
 		request.params = datasource.createRequestParams(lat, lon, alt, radius, locale);
 		request.source = datasource;
 		
-		mixContext.getDownloader().submitJob(request);
+		mixContext.getDownloadManager().submitJob(request);
 		state.nextLStatus = MixState.PROCESSING;
 		
 	}
@@ -274,14 +274,14 @@ public class DataView {
 
 		
 		} else if (state.nextLStatus == MixState.PROCESSING) {
-			DownloadManager dm=mixContext.getDownloader();
+			DownloadManager dm=mixContext.getDownloadManager();
 			DownloadResult dRes;
 			
 			while((dRes=dm.getNextResult())!=null)
 			{
 				if (dRes.error && retry < 3) {
 					retry++;
-					mixContext.getDownloader().submitJob(dRes.errorRequest);
+					mixContext.getDownloadManager().submitJob(dRes.errorRequest);
 					// Notification
 					//Toast.makeText(mixContext, dRes.errorMsg, Toast.LENGTH_SHORT).show();
 				}

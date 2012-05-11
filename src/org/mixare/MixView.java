@@ -48,6 +48,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -93,6 +94,8 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	private MixViewDataHolder mixViewData = new MixViewDataHolder();
 	//TAG for logging
 	public static final String TAG = "Mixare";
+	private boolean isDebuggable;
+	private static final String debugWorkFlow = "DebugWorkFlow"; 
 	
 	//why use Memory to save a state? MixContext? activity lifecycle?
 	public static MixView CONTEXT;
@@ -105,7 +108,8 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 		super.onCreate(savedInstanceState);
 		MixView.CONTEXT = this;
 		try {
-			
+			//This to ensure that debug logs would not be in release versions.
+			isDebuggable = ( 0 != ( getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE ) );
 			handleIntent(getIntent());
 
 			final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -118,7 +122,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			maintainCamera();
 			maintainAugmentR();
 			maintainZoomBar();
-
+			
 			if (!isInited) {
 				mixViewData.setMixContext(new MixContext(this));
 				mixViewData.getMixContext().setDownloadManager(new DownloadManager(mixViewData.getMixContext()));
@@ -292,13 +296,36 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 		}
 	}
 	
-
+	/**
+	 * {@inheritDoc}
+	 * Customize Activity after switching back to it.
+	 * Currently it maintain and ensures view creation.
+	 */
+	protected void onRestart (){
+		super.onRestart();
+		isDebuggable = ( 0 != ( getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE ) );
+		if (isDebuggable){
+			Log.d (debugWorkFlow, "MixView - onRestart - Called");
+		}
+		maintainCamera();
+		maintainAugmentR();
+		maintainZoomBar();
+		
+	}
+	
 	/* ********* Operators ***********/ 
 
 	public void repaint() {
+		if (isDebuggable){
+			Log.d (debugWorkFlow, "MixView - repaint - Called");
+		}
+		//clear stored data
+		getDataView().clearEvents();
+		setDataView(null); //It's smelly code, but enforce garbage collector 
+							//to release data.
 		setDataView(new DataView(mixViewData.getMixContext()));
 		setdWindow(new PaintScreen());
-		setZoomLevel(); //@TODO Caller has to set the zoom. This function repaints only.
+		//setZoomLevel(); //@TODO Caller has to set the zoom. This function repaints only.
 	}
 	
 	/**
@@ -334,6 +361,31 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 				Gravity.BOTTOM));
 	}
 	
+	/**
+	 * Refreshes Download 
+	 */
+	private void refreshDownload(){
+		try {
+			if (mixViewData.getDownloadThread() != null){
+				if (!mixViewData.getDownloadThread().isInterrupted()){
+					mixViewData.getDownloadThread().interrupt();
+					mixViewData.getMixContext().getDownloadManager().restart();
+				}
+			}else { //if no download thread found
+				if (isDebuggable){
+					Log.w (debugWorkFlow, "MixView - refreshDownload - ops DownloadManager was not created, check workflow.");
+				}
+				mixViewData.setDownloadThread(new Thread(mixViewData
+						.getMixContext().getDownloadManager()));
+				//@TODO Syncronize DownloadManager, call Start instead of run.
+				mixViewData.getMixContext().getDownloadManager().run();
+			}
+		}catch (Exception ex){
+			if (isDebuggable){
+				Log.e (debugWorkFlow, "MixView - refreshDownload - Error refreshing DownloadManager");
+			}
+		}
+	}
 	public void setErrorDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage(getString(R.string.connection_error_dialog));
@@ -345,7 +397,10 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 				fError=false;
 				//TODO improve
 				try {
-					repaint();	       		
+					maintainCamera();
+					maintainAugmentR();
+					repaint();
+					setZoomLevel();
 				}
 				catch(Exception ex){
 					//Don't call doError, it will be a recursive call.
@@ -589,6 +644,8 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			mixViewData.getMyZoomBar().getProgress();
 
 			t.cancel();
+			//repaint after zoom level changed.
+			repaint();
 			setZoomLevel();
 		}
 
@@ -832,16 +889,13 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 	private void setZoomLevel() {
 		float myout = calcZoomLevel();
-
 		getDataView().setRadius(myout);
-
-		mixViewData.getMyZoomBar().setVisibility(View.INVISIBLE);
+		//caller has the to control of zoombar visibility, not setzoom
+		//mixViewData.getMyZoomBar().setVisibility(View.INVISIBLE);
 		mixViewData.setZoomLevel(String.valueOf(myout));
-
-		getDataView().doStart();
-		getDataView().clearEvents();
-		mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().getDownloadManager()));
-		mixViewData.getDownloadThread().start();
+		//setZoomLevel, caller has to call refreash download if needed.
+//		mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().getDownloadManager()));
+//		mixViewData.getDownloadThread().start();
 
 	};
 
