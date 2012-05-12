@@ -135,7 +135,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			}
 
 			/*Get the preference file PREFS_NAME stored in the internal memory of the phone*/
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 			
 			/*check if the application is launched for the first time*/
 			if(settings.getBoolean("firstAccess",false)==false){
@@ -180,12 +180,18 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	@Override
 	protected void onResume() {
 		super.onResume();
-
 		try {
+			Log.d(debugWorkFlow, "MixView - OnResume Called");
 			this.mixViewData.getmWakeLock().acquire();
 
 			killOnError();
 			mixViewData.getMixContext().mixView = this;
+			//ensure concurrency on the created MixContex, so DataView should have the same one.
+			getDataView().setMixContext(mixViewData.getMixContext());
+			//then update the context with dataView. This clearly circular dependency and reconstruction is needed
+			//@TODO Fix DataView circular dependency
+			mixViewData.setMixContext(getDataView().getContext());
+			
 			getDataView().doStart();
 			getDataView().clearEvents();
 
@@ -426,7 +432,6 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 		alert.show();
 	}
 
-	
 	public float calcZoomLevel(){
 
 		int myZoomLevel = mixViewData.getMyZoomBar().getProgress();
@@ -458,16 +463,16 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	 *  and store user's acceptance.
 	 * @param settings
 	 */
-	private void firstAccess(SharedPreferences settings) {
-		SharedPreferences.Editor editor = settings.edit();
-		AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+	private void firstAccess(final SharedPreferences settings) {
+		final SharedPreferences.Editor editor = settings.edit();
+		final AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
 		builder1.setMessage(getString(R.string.license));
 		builder1.setNegativeButton(getString(R.string.close_button), new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int id) {
 				dialog.dismiss();
 			}
 		});
-		AlertDialog alert1 = builder1.create();
+		final AlertDialog alert1 = builder1.create();
 		alert1.setTitle(getString(R.string.license_title));
 		alert1.show();
 		editor.putBoolean("firstAccess", true);
@@ -489,7 +494,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	 * @param SharedOreference settings where setting is stored
 	 * @return FrameLayout Hidden Zoom Bar
 	 */
-	private FrameLayout createZoomBar(SharedPreferences settings) {
+	private FrameLayout createZoomBar(final SharedPreferences settings) {
 		mixViewData.setMyZoomBar(new SeekBar(this));
 		//mixViewData.getMyZoomBar().setVisibility(View.INVISIBLE);
 		mixViewData.getMyZoomBar().setMax(100);
@@ -633,9 +638,9 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			//			zoomChanging= true;
 		}
 
-		public void onStopTrackingTouch(SeekBar seekBar) {
-			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-			SharedPreferences.Editor editor = settings.edit();
+		public void onStopTrackingTouch(final SeekBar seekBar) {
+			final SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			final SharedPreferences.Editor editor = settings.edit();
 			/*store the zoom range of the zoom bar selected by the user*/
 			editor.putInt("zoomLevel", mixViewData.getMyZoomBar().getProgress());
 			editor.commit();
@@ -645,9 +650,10 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			mixViewData.getMyZoomBar().getProgress();
 
 			t.cancel();
+			setZoomLevel();
 			//repaint after zoom level changed.
 			repaint();
-			setZoomLevel();
+			refreshDownload();
 		}
 
 	};
@@ -858,6 +864,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 
 	/* ******* Getter and Setters ***********/
 
+	
 	public boolean isZoombarVisible() {
 		return mixViewData.getMyZoomBar() != null && mixViewData.getMyZoomBar().getVisibility() == View.VISIBLE;
 	}
@@ -916,9 +923,6 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 //		mixViewData.getDownloadThread().start();
 
 	}
-
-
-
 }
 
 

@@ -57,6 +57,7 @@ public class DataView {
 
 	/**current context */
 	private MixContext mixContext;
+
 	/** is the view Inited? */
 	private boolean isInit;
 	
@@ -155,6 +156,10 @@ public class DataView {
 	
 	public MixContext getContext() {
 		return mixContext;
+	}
+	
+	public void setMixContext(MixContext mixContext) {
+		this.mixContext = mixContext;
 	}
 
 	public boolean isLauncherStarted() {
