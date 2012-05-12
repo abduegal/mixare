@@ -367,7 +367,10 @@ public class MixContext extends ContextWrapper implements MixContextInterface {
 	public void loadWebPage(String url, Context context) throws Exception {
 		WebView webview = new WebView(context);
 		webview.getSettings().setJavaScriptEnabled(true);
-
+		if (webview.willNotCacheDrawing()){
+			webview.buildDrawingCache(true);
+			//@TODO CALL destroyDrawingCache() when destroying (manual Clean up)
+		}
 		final Dialog d = new Dialog(context) {
 			public boolean onKeyDown(int keyCode, KeyEvent event) {
 				if (keyCode == KeyEvent.KEYCODE_BACK)
@@ -401,6 +404,7 @@ public class MixContext extends ContextWrapper implements MixContextInterface {
 				Gravity.BOTTOM));
 
 		if(!processUrl(url, mixView)){ //if the url could not be processed by another intent
+			d.setCancelable(true);
 			d.show();
 			webview.loadUrl(url);
 		}
