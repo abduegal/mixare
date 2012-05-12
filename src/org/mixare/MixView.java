@@ -386,6 +386,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			}
 		}
 	}
+	
 	public void setErrorDialog(){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage(getString(R.string.connection_error_dialog));
@@ -840,12 +841,27 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 			Toast.makeText( this, getString(R.string.search_failed_notification), Toast.LENGTH_LONG ).show();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * Mixare - Receives results from other launched activities
+	 * Base on the result returned, it either refreshes screen or not.
+	 */
+	protected void onActivityResult (int requestCode, int resultCode, Intent data){
+		Log.d(debugWorkFlow, "MixView - onActivityResult Called");
+		//check if the returned is request to refresh screen (setting might be changed)
+		if (data.getBooleanExtra("RefreshScreen", false)){
+			Log.d(debugWorkFlow, "MixView - Received Refresh Screen Request .. about to refresh");
+			repaint();
+			refreshDownload();
+		}
+	}
 
 	/* ******* Getter and Setters ***********/
 
 	public boolean isZoombarVisible() {
 		return mixViewData.getMyZoomBar() != null && mixViewData.getMyZoomBar().getVisibility() == View.VISIBLE;
 	}
+	
 	
 	public String getZoomLevel() {
 		return mixViewData.getZoomLevel();
@@ -883,10 +899,12 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	}
 
 
+	
 	public int getZoomProgress() {
 		return mixViewData.getZoomProgress();
 	}
 
+	
 	private void setZoomLevel() {
 		float myout = calcZoomLevel();
 		getDataView().setRadius(myout);
@@ -897,7 +915,7 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 //		mixViewData.setDownloadThread(new Thread(mixViewData.getMixContext().getDownloadManager()));
 //		mixViewData.getDownloadThread().start();
 
-	};
+	}
 
 
 
