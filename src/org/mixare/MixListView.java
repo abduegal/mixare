@@ -36,6 +36,7 @@ import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -70,21 +71,9 @@ public class MixListView extends ListActivity {
 	public static List<Marker> searchResultMarkers;
 	public static List<Marker> originalMarkerList;
 
-	public Vector<String> getDataSourceMenu() {
-		return dataSourceMenu;
-	}
 	
-	public Vector<String> getDataSourceDescription() {
-		return dataSourceDescription;
-	}
-
-	public Vector<Boolean> getDataSourceChecked() {
-		return dataSourceChecked;
-	}
-	public Vector<Integer> getDataSourceIcon() {
-		return dataSourceIcon;
-	}
 	@Override
+	
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
 		//		mixCtx = MixView.ctx;
@@ -141,6 +130,76 @@ public class MixListView extends ListActivity {
 		}
 	}
 
+	/* ********* Operators ***********/ 
+	
+	public void clickOnListView(int position){
+		/*if no website is available for this item*/
+		String selectedURL = position < selectedItemURL.size() ? selectedItemURL.get(position) : null;
+		if (selectedURL == null || selectedURL.length() <= 0)
+			Toast.makeText( this, getString(R.string.no_website_available), Toast.LENGTH_LONG ).show();			
+		else if("search".equals(selectedURL)){
+			dataView.setFrozen(false);
+			dataView.getDataHandler().setMarkerList(originalMarkerList);
+			finish();
+			Intent intent1 = new Intent(this, MixListView.class); 
+			startActivityForResult(intent1, 42);
+		}
+		else {
+			try {
+				if (selectedURL.startsWith("webpage")) {
+					String newUrl = MixUtils.parseAction(selectedURL);
+					dataView.getContext().loadWebPage(newUrl, this);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/* ********* Operator - Menu ******/
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		int base = Menu.FIRST;
+
+		/*define menu items*/
+		MenuItem item1 = menu.add(base, base, base, getString(R.string.menu_item_3)); 
+		MenuItem item2 = menu.add(base, base+1, base+1, getString(R.string.map_menu_cam_mode));
+		/*assign icons to the menu items*/
+		item1.setIcon(android.R.drawable.ic_menu_mapmode);
+		item2.setIcon(android.R.drawable.ic_menu_camera);
+
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item){
+		switch(item.getItemId()){
+		/*Map View*/
+		case 1:
+			createMixMap();
+			//finish();
+			break;
+			/*back to Camera View*/
+		case 2:
+			closeListViewActivity();
+			break;
+		}
+		return true;
+	}
+
+	public void createMixMap(){
+		Intent intent2 = new Intent(MixListView.this, MixMap.class); 
+		startActivity(intent2);
+	}
+	
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		super.onListItemClick(l, v, position, id);
+		clickOnListView(position);
+	}
+	
+	/* ************ Handlers *************/
+	
 	private void handleIntent(Intent intent) {
 		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
 			String query = intent.getStringExtra(SearchManager.QUERY);
@@ -193,72 +252,52 @@ public class MixListView extends ListActivity {
 		}
 	}
 
-
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		super.onListItemClick(l, v, position, id);
-		clickOnListView(position);
+	/**
+	 * Closes ListView Activity and returns that request to NOT refresh screen.
+	 */
+	private void closeListViewActivity() {
+		Intent closeListView = new Intent();
+		closeListView.putExtra("RefreshScreen", false);
+		setResult(RESULT_OK, closeListView);
+		finish();
 	}
 
-	public void clickOnListView(int position){
-		/*if no website is available for this item*/
-		String selectedURL = position < selectedItemURL.size() ? selectedItemURL.get(position) : null;
-		if (selectedURL == null || selectedURL.length() <= 0)
-			Toast.makeText( this, getString(R.string.no_website_available), Toast.LENGTH_LONG ).show();			
-		else if("search".equals(selectedURL)){
-			dataView.setFrozen(false);
-			dataView.getDataHandler().setMarkerList(originalMarkerList);
-			finish();
-			Intent intent1 = new Intent(this, MixListView.class); 
-			startActivityForResult(intent1, 42);
-		}
-		else {
-			try {
-				if (selectedURL.startsWith("webpage")) {
-					String newUrl = MixUtils.parseAction(selectedURL);
-					dataView.getContext().loadWebPage(newUrl, this);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+	/**
+	 * {@inheritDoc}
+	 * KeyEven Handler.
+	 * Handles
+	 * -Back button (closes the activity)
+	 */
+	public boolean onKeyDown(int keyCode, KeyEvent event){
+		try{
+			if (keyCode == KeyEvent.KEYCODE_BACK){
+				closeListViewActivity();
+			}else{
+				return false;
 			}
-		}
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		int base = Menu.FIRST;
-
-		/*define menu items*/
-		MenuItem item1 = menu.add(base, base, base, getString(R.string.menu_item_3)); 
-		MenuItem item2 = menu.add(base, base+1, base+1, getString(R.string.map_menu_cam_mode));
-		/*assign icons to the menu items*/
-		item1.setIcon(android.R.drawable.ic_menu_mapmode);
-		item2.setIcon(android.R.drawable.ic_menu_camera);
-
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item){
-		switch(item.getItemId()){
-		/*Map View*/
-		case 1:
-			createMixMap();
-			finish();
-			break;
-			/*back to Camera View*/
-		case 2:
-			finish();
-			break;
+		}catch (Exception ex){
+			Log.w("Mixare", "ListView key undefined");
 		}
 		return true;
 	}
 
-	public void createMixMap(){
-		Intent intent2 = new Intent(MixListView.this, MixMap.class); 
-		startActivityForResult(intent2, 20);
+	/* ******* Getter and Setters ***********/
+	
+	public Vector<String> getDataSourceMenu() {
+		return dataSourceMenu;
+	}
+	
+	public Vector<String> getDataSourceDescription() {
+		return dataSourceDescription;
 	}
 
+	public Vector<Boolean> getDataSourceChecked() {
+		return dataSourceChecked;
+	}
+	
+	public Vector<Integer> getDataSourceIcon() {
+		return dataSourceIcon;
+	}
 	public static String getSearchQuery(){
 		return searchQuery;
 	}
