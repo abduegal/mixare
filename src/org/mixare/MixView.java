@@ -511,7 +511,6 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	}
 	
 	/* ********* Operator - Menu ******/
-	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -855,10 +854,14 @@ public class MixView extends Activity implements SensorEventListener, OnTouchLis
 	protected void onActivityResult (int requestCode, int resultCode, Intent data){
 		Log.d(debugWorkFlow, "MixView - onActivityResult Called");
 		//check if the returned is request to refresh screen (setting might be changed)
+		try {
 		if (data.getBooleanExtra("RefreshScreen", false)){
 			Log.d(debugWorkFlow, "MixView - Received Refresh Screen Request .. about to refresh");
 			repaint();
 			refreshDownload();
+		}
+		} catch (Exception ex){
+			//do nothing do to mix of return results.
 		}
 	}
 

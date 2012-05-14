@@ -160,6 +160,7 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		myOverlay.addOverlay(item);
 		getMapOverlays().add(myOverlay); 
 	}
+	
 	public void createWalkingPath(){
 		if(isPathVisible()){
 			mapOverlays=mapView.getOverlays();
@@ -167,6 +168,7 @@ public class MixMap extends MapActivity implements OnTouchListener{
 			mapOverlays.add(item);
 		}
 	}
+	
 	public void createListView(){
 		if (dataView.getDataHandler().getMarkerCount() > 0) {
 			Intent intent1 = new Intent(MixMap.this, MixListView.class); 
@@ -185,6 +187,16 @@ public class MixMap extends MapActivity implements OnTouchListener{
 		boolean result = settings.getBoolean(property, true);
 		editor.putBoolean(property, !result);
 		editor.commit();		
+	}
+	
+	/**
+	 * Closes MapView Activity and returns that request to NOT refresh screen.
+	 */
+	private void closeMapViewActivity() {
+		Intent closeMapView = new Intent();
+		closeMapView.putExtra("RefreshScreen", false);
+		setResult(RESULT_OK, closeMapView);
+		finish();
 	}
 
 	/* ********* Operator - Menu ******/
@@ -233,11 +245,11 @@ public class MixMap extends MapActivity implements OnTouchListener{
 			/*List View*/
 		case 4:
 			createListView();
-			finish();
+			//finish(); //keep user in map view.
 			break;
 			/*back to Camera View*/
 		case 5:
-			finish();
+			closeMapViewActivity();
 			break;
 	
 	case 6:
