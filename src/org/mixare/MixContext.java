@@ -135,6 +135,9 @@ public class MixContext extends ContextWrapper implements MixContextInterface {
 		locationFinder.findLocation(this);
 	}
 
+	/**
+	 * @deprecated please use getDownloadManager
+	 */
 	public DownloadManager getDownloader() {
 		return downloadManager;
 	}
