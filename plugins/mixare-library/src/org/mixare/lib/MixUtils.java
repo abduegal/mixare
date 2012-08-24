@@ -38,6 +38,20 @@ public class MixUtils {
 	}
 
 	/**
+	 * Checks whether a String is Null or Empty
+	 * @param string The String to be checked
+	 * @return True if String is Null or Empty
+	 */
+	public static boolean isNullOrEmpty(String string) {
+		if (string == null) {
+			return true;
+		} else if (string.trim().length() == 0) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Formats a given distance in meters.
 	 * 
 	 * Example:
